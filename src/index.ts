@@ -11,7 +11,7 @@ type CreateCommitState = {
   state: 'error' | 'failure' | 'pending' | 'success'
 }
 
-function parseTasksFromComment(body: string) {
+export function parseTasksFromComment(body: string) {
   const tokenized_content = marked.lexer(body)
   return tokenized_content
     ?.filter((md_item) => md_item.type === 'list')
@@ -37,34 +37,34 @@ async function checkMergeStatus() {
 
   const pushPayload = github.context.payload as DiscussionCommentEditedEvent
 
-  const is_block_merge = parseTasksFromComment(pushPayload.comment.body).find(
+  const remaining_task = parseTasksFromComment(pushPayload.comment.body).find(
     (task) => !task?.checked,
   )
 
-  const description = is_block_merge
+  const description = remaining_task
     ? 'It cannot be merged without completing the checklist'
     : 'Checklist items check completed'
-  const state = is_block_merge ? 'failure' : 'success'
+  const state = remaining_task ? 'failure' : 'success'
+  console.log({ description, state })
   return createCommitStatus({ description, sha, state })
 }
 
 async function createCommitStatus({ sha, description, state }: CreateCommitState) {
-  await octokit.rest.repos.createCommitStatus({
+  state === 'failure' ? core.setFailed(description) : core.setOutput('description', description)
+  return octokit.rest.repos.createCommitStatus({
     description,
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     sha,
     state,
   })
-  return state === 'failure'
-    ? core.setFailed(description)
-    : core.setOutput('description', description)
 }
 
 export default async function run() {
   try {
     await checkMergeStatus()
   } catch (error: any) {
+    core.error(error)
     core.setFailed(error)
   }
 }
