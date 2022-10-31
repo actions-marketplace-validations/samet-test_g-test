@@ -1,10 +1,10 @@
 {
   "name": "github-action",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "description": "github-action",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "ncc build src/index.ts -o lib",
     "test": "ava"
   },
   "repository": {
@@ -22,8 +22,8 @@
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
     "marked": "^4.1.1",
-    "typescript": "^4.8.4",
-    "quibble": "^0.6.14"
+    "quibble": "^0.6.14",
+    "typescript": "^4.8.4"
   },
   "eslintConfig": {
     "root": true,
@@ -37,11 +37,12 @@
     }
   },
   "devDependencies": {
-    "@ava/typescript": "^3.0.1",
-    "ava": "^5.0.1",
     "@anonrig/eslint-config": "^0.3.4",
+    "@ava/typescript": "^3.0.1",
     "@octokit/webhooks-types": "^6.6.0",
     "@types/marked": "^4.0.7",
+    "@vercel/ncc": "^0.34.0",
+    "ava": "^5.0.1",
     "eslint": "^8.25.0",
     "ts-node": "^10.9.1"
   }
