@@ -20,19 +20,6 @@ function parseTasksFromComment(body: string) {
     ?.map((taskItem) => ({ checked: taskItem.checked, task: taskItem.text }))
 }
 
-function getUpdatedTasks(event: DiscussionCommentEditedEvent) {
-  const tasks_before = parseTasksFromComment(event.changes.body.from)
-  const task_updates = parseTasksFromComment(event.comment.body)
-  return task_updates
-    .map(
-      (updated_task) =>
-        tasks_before.find(
-          (t) => t.task === updated_task.task && t.checked !== updated_task.checked,
-        ) && updated_task,
-    )
-    .filter(Boolean)
-}
-
 async function checkMergeStatus() {
   const pull_request = await octokit.rest.pulls.get({
     owner: github.context.repo.owner,
@@ -50,7 +37,9 @@ async function checkMergeStatus() {
 
   const pushPayload = github.context.payload as DiscussionCommentEditedEvent
 
-  const is_block_merge = !getUpdatedTasks(pushPayload).every((task) => Boolean(task?.checked))
+  const is_block_merge = !parseTasksFromComment(pushPayload.comment.body).every((task) =>
+    Boolean(task?.checked),
+  )
 
   const description = is_block_merge
     ? 'It cannot be merged without completing the checklist'
