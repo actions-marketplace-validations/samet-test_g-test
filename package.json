@@ -1,10 +1,10 @@
 {
   "name": "github-action",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "github-action",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build src/index.ts -o lib",
+    "build": "npx tsc && ncc build src/index.ts -o lib",
     "test": "ava"
   },
   "repository": {
