@@ -1,5 +1,8 @@
 name: "x code review bot"
 description: "Checks code review tasks on pull requests"
+branding:
+  color: blue
+  icon: check-square
 inputs:
   token:
     description: "GITHUB_TOKEN"
