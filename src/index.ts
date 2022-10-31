@@ -50,7 +50,7 @@ async function checkMergeStatus() {
 
   const pushPayload = github.context.payload as DiscussionCommentEditedEvent
 
-  const is_block_merge = getUpdatedTasks(pushPayload).every((task) => Boolean(!task?.checked))
+  const is_block_merge = !getUpdatedTasks(pushPayload).every((task) => Boolean(task?.checked))
 
   const description = is_block_merge
     ? 'It cannot be merged without completing the checklist'
