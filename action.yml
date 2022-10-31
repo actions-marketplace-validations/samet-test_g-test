@@ -1,0 +1,10 @@
+name: "x code review bot"
+description: "Checks code review tasks on pull requests"
+inputs:
+  token:
+    description: "GITHUB_TOKEN"
+    default: ${{ github.token }}
+    required: true
+runs:
+  using: "node16"
+  main: "dist/index.js"
