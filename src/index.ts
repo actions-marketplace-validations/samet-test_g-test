@@ -37,8 +37,8 @@ async function checkMergeStatus() {
 
   const pushPayload = github.context.payload as DiscussionCommentEditedEvent
 
-  const is_block_merge = !parseTasksFromComment(pushPayload.comment.body).every((task) =>
-    Boolean(task?.checked),
+  const is_block_merge = parseTasksFromComment(pushPayload.comment.body).find(
+    (task) => !task?.checked,
   )
 
   const description = is_block_merge
