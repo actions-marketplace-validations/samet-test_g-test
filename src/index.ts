@@ -7,11 +7,10 @@ const octokit = github.getOctokit(core.getInput('token'))
 
 type CreateCommitState = {
   sha: string
-  description: string
-  state: 'error' | 'failure' | 'pending' | 'success'
+  is_failure: boolean
 }
 
-export function parseTasksFromComment(body: string) {
+function parseTasksFromComment(body: string) {
   const tokenized_content = marked.lexer(body)
   return tokenized_content
     ?.filter((md_item) => md_item.type === 'list')
@@ -28,35 +27,29 @@ async function checkMergeStatus() {
   })
   const sha = pull_request.data.head.sha
   if (github.context.payload?.action === 'created') {
-    return createCommitStatus({
-      description: 'It cannot be merged without completing the checklist',
-      sha,
-      state: 'failure',
-    })
+    return createCommitStatus({ is_failure: true, sha })
   }
 
   const pushPayload = github.context.payload as DiscussionCommentEditedEvent
-
-  const remaining_task = parseTasksFromComment(pushPayload.comment.body).find(
-    (task) => !task?.checked,
+  const remaining_task = Boolean(
+    parseTasksFromComment(pushPayload.comment.body).find((task) => !task?.checked),
   )
 
-  const description = remaining_task
-    ? 'It cannot be merged without completing the checklist'
-    : 'Checklist items check completed'
-  const state = remaining_task ? 'failure' : 'success'
-  console.log({ description, state })
-  return createCommitStatus({ description, sha, state })
+  return createCommitStatus({ is_failure: remaining_task, sha })
 }
 
-async function createCommitStatus({ sha, description, state }: CreateCommitState) {
-  state === 'failure' ? core.setFailed(description) : core.setOutput('description', description)
+async function createCommitStatus({ sha, is_failure }: CreateCommitState) {
+  const description = is_failure
+    ? 'It cannot be merged without completing the checklist'
+    : 'Checklist items check completed'
+  is_failure ? core.setFailed(description) : core.setOutput('description', description)
+
   return octokit.rest.repos.createCommitStatus({
     description,
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     sha,
-    state,
+    state: is_failure ? 'failure' : 'success',
   })
 }
 
@@ -64,7 +57,6 @@ export default async function run() {
   try {
     await checkMergeStatus()
   } catch (error: any) {
-    core.error(error)
     core.setFailed(error)
   }
 }

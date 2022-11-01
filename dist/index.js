@@ -9545,7 +9545,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseTasksFromComment = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const marked_1 = __nccwpck_require__(5741);
@@ -9555,7 +9554,6 @@ function parseTasksFromComment(body) {
     const tokenized_content = marked_1.marked.lexer(body);
     return (_c = (_b = (_a = tokenized_content === null || tokenized_content === void 0 ? void 0 : tokenized_content.filter((md_item) => md_item.type === 'list')) === null || _a === void 0 ? void 0 : _a.flatMap((list) => list.items)) === null || _b === void 0 ? void 0 : _b.filter((listItem) => listItem.type === 'list_item' && !!listItem.task)) === null || _c === void 0 ? void 0 : _c.map((taskItem) => ({ checked: taskItem.checked, task: taskItem.text }));
 }
-exports.parseTasksFromComment = parseTasksFromComment;
 function checkMergeStatus() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
@@ -9566,31 +9564,25 @@ function checkMergeStatus() {
         });
         const sha = pull_request.data.head.sha;
         if (((_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.action) === 'created') {
-            return createCommitStatus({
-                description: 'It cannot be merged without completing the checklist',
-                sha,
-                state: 'failure',
-            });
+            return createCommitStatus({ is_failure: true, sha });
         }
         const pushPayload = github.context.payload;
-        const remaining_task = parseTasksFromComment(pushPayload.comment.body).find((task) => !(task === null || task === void 0 ? void 0 : task.checked));
-        const description = remaining_task
-            ? 'It cannot be merged without completing the checklist'
-            : 'Checklist items check completed';
-        const state = remaining_task ? 'failure' : 'success';
-        console.log({ description, state });
-        return createCommitStatus({ description, sha, state });
+        const remaining_task = Boolean(parseTasksFromComment(pushPayload.comment.body).find((task) => !(task === null || task === void 0 ? void 0 : task.checked)));
+        return createCommitStatus({ is_failure: remaining_task, sha });
     });
 }
-function createCommitStatus({ sha, description, state }) {
+function createCommitStatus({ sha, is_failure }) {
     return __awaiter(this, void 0, void 0, function* () {
-        state === 'failure' ? core.setFailed(description) : core.setOutput('description', description);
+        const description = is_failure
+            ? 'It cannot be merged without completing the checklist'
+            : 'Checklist items check completed';
+        is_failure ? core.setFailed(description) : core.setOutput('description', description);
         return octokit.rest.repos.createCommitStatus({
             description,
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             sha,
-            state,
+            state: is_failure ? 'failure' : 'success',
         });
     });
 }
@@ -9600,7 +9592,6 @@ function run() {
             yield checkMergeStatus();
         }
         catch (error) {
-            core.error(error);
             core.setFailed(error);
         }
     });

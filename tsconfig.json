@@ -3,12 +3,12 @@
     "target": "es6",
     "module": "commonjs",
     "lib": ["es6"],
-    "outDir": "./dist",
+    "outDir": "./lib",
     "rootDir": "./src",
     "declaration": false,
     "strict": true,
     "noImplicitAny": false,
     "esModuleInterop": true
   },
-  "exclude": ["__test__", "dist", "node_modules"]
+  "exclude": ["lib", "node_modules"]
 }
