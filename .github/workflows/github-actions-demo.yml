@@ -1,7 +1,6 @@
 name: x - code review checklist
 run-name: x - code review checklist 🚀
 on: [issue_comment]
-
 jobs:
   xco-checklist-bot:
     runs-on: ubuntu-latest
